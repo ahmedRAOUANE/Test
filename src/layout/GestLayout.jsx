@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Box, Button, Container, Grid, Typography } from '@mui/material'
-import Login from '../auth/Login'
-import Signup from '../auth/Signup'
+import Login from '../auth/Login';
+import Signup from '../auth/Signup';
 
-const LoginPage = () => {
+const GestLayout = () => {
     const [currentPage, setCurrentPage] = useState('login');
 
     const pageHandler = (page) => {
@@ -43,4 +43,4 @@ const LoginPage = () => {
     )
 }
 
-export default LoginPage
+export default GestLayout

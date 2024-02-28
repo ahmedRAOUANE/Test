@@ -1,63 +1,56 @@
-import React, { useRef } from 'react';
-import { Button, Container, Input } from '@mui/joy';
-import { Typography } from '@mui/material';
+import React from 'react';
+import { Button, Container, Input, Stack } from '@mui/joy';
+import { Alert, Typography } from '@mui/material';
+import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase/config";
+import { useDispatch, useSelector } from 'react-redux';
+import { setError, setUserCredencials } from '../features/authSlice';
+import { setUser } from '../features/userSlice';
 
 const Signup = () => {
-    const email = useRef();
-    const username = useRef();
-    const password = useRef();
+    const dispatch = useDispatch();
+    const userCredencials = useSelector(state => state.authSlice.userCredencials);
+    const error = useSelector(state => state.authSlice.error);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            dispatch(setUser({ uid: user.uid, email: user.email }));
+        } else {
+            dispatch(setUser(null))
+        }
+    })
+
+    const handleCredencials = (e) => {
+        dispatch(setUserCredencials({ ...userCredencials, [e.target.id]: e.target.value }));
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        const payload = {
-            email: email.current.value,
-            username: username.current.value,
-            password: password.current.value,
-        }
+        dispatch(setError(''));
 
         // make request
-        console.log("data from signup: ", payload);
+        createUserWithEmailAndPassword(auth, userCredencials.email, userCredencials.password)
+            .catch(err => {
+                console.log("ERROR message: ", err.message);
+                dispatch(setError(err.message));
+            })
     }
 
     return (
         <Container>
             <Typography variant='h4' gutterBottom>Signup</Typography>
-            <form style={{ display: 'flex', flexDirection: 'column' }} onSubmit={handleSubmit}>
-                <Input
-                    inputRef={email}
-                    slotProps={{
-                        input: { placeholder: "email", type: "email" },
-                    }}
-                    sx={{
-                        "--Input-minHeight": "56px",
-                        "--Input-radius": "6px",
-                        marginBottom: "10px",
-                    }}
-                />
-                <Input
-                    inputRef={username}
-                    slotProps={{
-                        input: { placeholder: "username", type: "text" },
-                    }}
-                    sx={{
-                        "--Input-minHeight": "56px",
-                        "--Input-radius": "6px",
-                        marginBottom: "10px",
-                    }}
-                />
-                <Input
-                    inputRef={password}
-                    slotProps={{
-                        input: { placeholder: "password", type: "text" },
-                    }}
-                    sx={{
-                        "--Input-minHeight": "56px",
-                        "--Input-radius": "6px",
-                        marginBottom: "10px",
-                    }}
-                />
-                <Button type='submit'>signup</Button>
+
+            <form onSubmit={handleSubmit}>
+                <Stack mb={2}>
+                    {error && <Alert severity="error">{error}</Alert>}
+                </Stack>
+                <Stack spacing={2}>
+                    <Input id='email' autoComplete='off' onChange={(e) => handleCredencials(e)} type={'email'} placeholder="email" required />
+                    <Input id='username' autoComplete='off' onChange={(e) => handleCredencials(e)} type={'username'} placeholder="email" required />
+                    <Input id='password' autoComplete='off' onChange={(e) => handleCredencials(e)} type={'password'} placeholder="password" required />
+                    <Input id='confirmPassword' autoComplete='off' onChange={(e) => handleCredencials(e)} type={'password'} placeholder="confirm password" required />
+                    <Button type="submit">Submit</Button>
+                </Stack>
             </form>
         </Container>
     );
